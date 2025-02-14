@@ -1,21 +1,21 @@
 import { ComponentSettings, MCEvent } from '@managed-components/types'
 import { flattenKeys } from './utils'
 
-const USER_DATA: Record<string, { hashed?: boolean }> = {
-  em: { hashed: true },
-  ph: { hashed: true },
-  fn: { hashed: true },
-  ln: { hashed: true },
-  db: { hashed: true },
-  ge: { hashed: true },
-  ct: { hashed: true },
-  st: { hashed: true },
-  zp: { hashed: true },
-  country: { hashed: true },
-  external_id: { hashed: true },
-  subscription_id: {},
-  fb_login_id: {},
-  lead_id: {},
+const USER_DATA: Record<string, { fbKey: string; hashed?: boolean }> = {
+  email: { fbKey: 'em', hashed: true },
+  phone: { fbKey: 'ph', hashed: true },
+  firstName: { fbKey: 'fn', hashed: true },
+  lastName: { fbKey: 'ln', hashed: true },
+  dateOfBirth: { fbKey: 'db', hashed: true },
+  gender: { fbKey: 'ge', hashed: true },
+  city: { fbKey: 'ct', hashed: true },
+  state: { fbKey: 'st', hashed: true },
+  postalCode: { fbKey: 'zp', hashed: true },
+  country: { fbKey: 'country', hashed: true },
+  id: { fbKey: 'external_id', hashed: true },
+  subscriptionId: { fbKey: 'subscription_id' },
+  loginId: { fbKey: 'fb_login_id' },
+  leadId: { fbKey: 'lead_id' },
 }
 
 // Build the start of every FB Cookie
@@ -122,17 +122,20 @@ export const getRequestBody = async (
   const body = getBaseRequestBody(eventType, event, settings)
 
   // appending hashed user data
+  const userData = { ...payload.user, ...payload.user?.facebook }
+  delete payload.user
+
   const encoder = new TextEncoder()
-  for (const [key, options] of Object.entries(USER_DATA)) {
-    let value = payload[key]
+  for (const [key, { fbKey, hashed }] of Object.entries(USER_DATA)) {
+    let value = userData[key]
     if (value) {
-      if (options.hashed) {
+      if (hashed) {
         const data = encoder.encode(String(value).trim().toLowerCase())
         const digest = await crypto.subtle.digest('SHA-256', data)
         const hashArray = Array.from(new Uint8Array(digest))
         value = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
       }
-      body.user_data[key] = value
+      body.user_data[fbKey] = value
       delete payload[key]
     }
   }
