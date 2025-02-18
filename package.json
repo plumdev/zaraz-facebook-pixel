@@ -11,7 +11,8 @@
     "typecheck": "tsc --project tsconfig.build.json --noEmit",
     "test": "vitest run --passWithNoTests",
     "test:dev": "vitest",
-    "release": "npm run build && npm version patch && npm publish"
+    "release": "npm run build && npm version patch && npm publish",
+    "deploy": "npx managed-component-to-cloudflare-worker dist/index.js impact"
   },
   "repository": {
     "type": "git",
